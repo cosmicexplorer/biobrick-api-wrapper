@@ -39,13 +39,14 @@ scrapePartsFromPgroupPage = (urls, cb, arr) ->
           scrapePartsFromPgroupPage urls[1..], cb, thisArr),
         1000)
 
-getTablesPage (urls) ->
-  scrapePartsFromPgroupPage urls.map(transformTableManagementToPartsDb),
-    console.log
+# getTablesPage (urls) ->
+#   scrapePartsFromPgroupPage urls.map(transformTableManagementToPartsDb),
+#     console.log
 
 getPartSeq = (name, cb) ->
   http.get "http://parts.igem.org/cgi/xml/part.cgi?part=#{name}", (resp) ->
-    new XmlStream(resp).on 'updateElement: seq_data', (seq) -> cb seq.$text
+    resp.pipe(process.stdout)
+    # new XmlStream(resp).on 'updateElement: seq_data', (seq) -> cb seq.$text
 
-# getPartSeq 'BBa_B0034', (seq) ->
-#   process.stdout.write seq + '\n'
+getPartSeq 'BBa_B0034', (seq) ->
+  process.stdout.write seq + '\n'

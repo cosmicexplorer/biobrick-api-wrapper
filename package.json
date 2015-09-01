@@ -6,6 +6,7 @@
     "type": "git",
     "url": "git://github.com/cosmicexplorer/biobrick-api-wrapper.git"
   },
+  "main": "biobrick.js",
   "devDependencies": {
     "coffee-script": "^1.9.3"
   },
