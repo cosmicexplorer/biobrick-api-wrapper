@@ -1,5 +1,6 @@
 fs = require 'fs'
 http = require 'http'
+
 _ = require 'lodash'
 DumpStream = require 'dump-stream'
 $ = require 'cheerio'
@@ -22,16 +23,18 @@ transformTableManagementToPartsDb = (url) ->
 # concatenate async calls
 scrapePartsFromPgroupPage = (urls, cb, arr) ->
   return if urls.length <= 0
-  arr = _.uniq(arr) or []
-  console.log urls.length
-  console.log arr.length
-  fs.writeFileSync 'out-file', JSON.stringify arr
+  arr = _.uniq(arr.sort()) or []
+  # console.log urls.length
+  # console.log arr.length
+  # fs.writeFileSync 'out-file', JSON.stringify arr
   http.get urls[0], (resp) ->
     s = new DumpStream
     resp.pipe(s).on 'finish', ->
       thisArr = (arr or []).concat $('a.part_link', s.dump()).map((ind, el) ->
         el.children).get().map (el) -> el.data
       # wish we had real pattern matching here, but oh well
+      # setTimeout is nice for avoiding throttling, but also because it clears
+      # the call stack so we can do this recursive asynchrony thing
       setTimeout((->
         if urls.length is 1
           cb thisArr
@@ -45,8 +48,14 @@ scrapePartsFromPgroupPage = (urls, cb, arr) ->
 
 getPartSeq = (name, cb) ->
   http.get "http://parts.igem.org/cgi/xml/part.cgi?part=#{name}", (resp) ->
-    resp.pipe(process.stdout)
-    # new XmlStream(resp).on 'updateElement: seq_data', (seq) -> cb seq.$text
+    new XmlStream(resp).on 'updateElement: seq_data', (seq) ->
+      cb name, seq.$text.replace /\s/, ""
 
-getPartSeq 'BBa_B0034', (seq) ->
-  process.stdout.write seq + '\n'
+# getPartSeq 'BBa_B0034', (name, seq) ->
+#   console.log {name: name, seq: seq}
+
+module.exports =
+  getTablesPage: getTablesPage
+  transformTableManagementToPartsDb: transformTableManagementToPartsDb
+  scrapePartsFromPgroupPage: scrapePartsFromPgroupPage
+  getPartSeq: getPartSeq
